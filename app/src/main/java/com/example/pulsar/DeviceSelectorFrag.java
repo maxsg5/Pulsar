@@ -1,12 +1,19 @@
 package com.example.pulsar;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.Toast;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -52,13 +59,67 @@ public class DeviceSelectorFrag extends Fragment {
         if (getArguments() != null) {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
+
         }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        //initialize UI
+        View view = inflater.inflate(R.layout.fragment_device_selector, container, false);
+        Button ScanButton = (Button) view.findViewById(R.id.ScanButton);
+
+        //create onClickListener for ScanButton
+        ScanButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                checkBluetooth();
+            }
+        });
+
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_device_selector, container, false);
+        return view;
+    }
+
+
+    // Register the permissions callback, which handles the user's response to the
+// system permissions dialog. Save the return value, an instance of
+// ActivityResultLauncher, as an instance variable.
+    private ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    // Permission is granted. Continue the action or workflow in your
+                    // app.
+                    Toast.makeText(getActivity(), "Bluetooth granted!", Toast.LENGTH_SHORT).show();
+
+                } else {
+                    // Explain to the user that the feature is unavailable because the
+                    // feature requires a permission that the user has denied. At the
+                    // same time, respect the user's decision. Don't link to system
+                    // settings in an effort to convince the user to change their
+                    // decision.
+                    Toast.makeText(getActivity(), "Bluetooth not granted", Toast.LENGTH_SHORT).show();
+
+                }
+            });
+
+    public void checkBluetooth(){
+        if (ContextCompat.checkSelfPermission(
+
+                getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            // You can use the API that requires the permission.
+            Toast.makeText(getActivity(), "Bluetooth granted", Toast.LENGTH_SHORT).show();
+        }  else {
+            // You can directly ask for the permission.
+            // The registered ActivityResultCallback gets the result of this request.
+            requestPermissionLauncher.launch(
+                    Manifest.permission.ACCESS_FINE_LOCATION
+
+            );
+        }
+
+
     }
 }
