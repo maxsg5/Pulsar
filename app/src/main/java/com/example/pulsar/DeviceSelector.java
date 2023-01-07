@@ -16,6 +16,8 @@ public class DeviceSelector extends AppCompatActivity {
 
     Button perms_btn;
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

@@ -1,19 +1,34 @@
 package com.example.pulsar;
 
 import android.Manifest;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothManager;
+import android.bluetooth.le.BluetoothLeScanner;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import no.nordicsemi.android.support.v18.scanner.BluetoothLeScannerCompat;
+import no.nordicsemi.android.support.v18.scanner.ScanCallback;
+import no.nordicsemi.android.support.v18.scanner.ScanFilter;
+import no.nordicsemi.android.support.v18.scanner.ScanResult;
+import no.nordicsemi.android.support.v18.scanner.ScanSettings;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -76,6 +91,7 @@ public class DeviceSelectorFrag extends Fragment {
             public void onClick(View view) {
 
                 checkBluetooth();
+                bluetoothScan();
             }
         });
 
@@ -105,13 +121,13 @@ public class DeviceSelectorFrag extends Fragment {
                 }
             });
 
-    public void checkBluetooth(){
+    public void checkBluetooth() {
         if (ContextCompat.checkSelfPermission(
 
                 getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             // You can use the API that requires the permission.
             Toast.makeText(getActivity(), "Bluetooth granted", Toast.LENGTH_SHORT).show();
-        }  else {
+        } else {
             // You can directly ask for the permission.
             // The registered ActivityResultCallback gets the result of this request.
             requestPermissionLauncher.launch(
@@ -119,7 +135,46 @@ public class DeviceSelectorFrag extends Fragment {
 
             );
         }
-
-
     }
+
+    public void bluetoothScan() {
+        BluetoothLeScannerCompat scanner = BluetoothLeScannerCompat.getScanner();
+        ScanSettings settings = new ScanSettings.Builder()
+                .setLegacy(false)
+                .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
+                .setReportDelay(5000)
+                .setUseHardwareBatchingIfSupported(true)
+                .build();
+        List<ScanFilter> filters = new ArrayList<>();
+        //filters.add(new ScanFilter.Builder().setServiceUuid(mUuid).build());
+        Toast.makeText(getActivity(), "Scanning!", Toast.LENGTH_SHORT).show();
+
+        scanner.startScan(leScanback);
+
+        scanner.stopScan(leScanback);
+    }
+
+    public ScanCallback leScanback = new ScanCallback() {
+        @Override
+        public void onScanResult(int callbackType, @NonNull ScanResult result) {
+            super.onScanResult(callbackType, result);
+
+            if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                Toast.makeText(getActivity(), "Missing perms!", Toast.LENGTH_SHORT).show();
+
+                return;
+            }
+            Toast.makeText(getActivity(), result.getDevice().getName(), Toast.LENGTH_SHORT).show();
+
+        }
+    };
+
+
 }
