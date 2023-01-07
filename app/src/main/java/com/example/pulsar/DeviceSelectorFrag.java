@@ -106,19 +106,38 @@ public class DeviceSelectorFrag extends Fragment {
             });
 
     public void checkBluetooth(){
-        if (ContextCompat.checkSelfPermission(
+        //get android version from device
+        int androidVersion = android.os.Build.VERSION.SDK_INT;
+        //greater than or equal to android 12
+        if (androidVersion >= 31) {
+            if (ContextCompat.checkSelfPermission(
+                    getActivity(), Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED) {
+                // You can use the API that requires the permission.
+                Toast.makeText(getActivity(), "Bluetooth granted", Toast.LENGTH_SHORT).show();
+            }  else {
+                // You can directly ask for the permission.
+                // The registered ActivityResultCallback gets the result of this request.
+                requestPermissionLauncher.launch(
+                        Manifest.permission.BLUETOOTH_SCAN
+                );
+            }
+        } else {
+            if (ContextCompat.checkSelfPermission(
+                    getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                // You can use the API that requires the permission.
+                Toast.makeText(getActivity(), "Bluetooth granted", Toast.LENGTH_SHORT).show();
+            }  else {
+                // You can directly ask for the permission.
+                // The registered ActivityResultCallback gets the result of this request.
+                requestPermissionLauncher.launch(
+                        Manifest.permission.ACCESS_FINE_LOCATION
+                );
 
-                getActivity(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            // You can use the API that requires the permission.
-            Toast.makeText(getActivity(), "Bluetooth granted", Toast.LENGTH_SHORT).show();
-        }  else {
-            // You can directly ask for the permission.
-            // The registered ActivityResultCallback gets the result of this request.
-            requestPermissionLauncher.launch(
-                    Manifest.permission.ACCESS_FINE_LOCATION
+            }
 
-            );
         }
+
+
 
 
     }
