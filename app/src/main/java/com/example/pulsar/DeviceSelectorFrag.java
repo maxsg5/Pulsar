@@ -144,12 +144,23 @@ public class DeviceSelectorFrag extends Fragment {
             if (ContextCompat.checkSelfPermission(
                     getActivity(), Manifest.permission.BLUETOOTH_SCAN) == PackageManager.PERMISSION_GRANTED) {
                 // You can use the API that requires the permission.
-                Toast.makeText(getActivity(), "Bluetooth granted", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "Bluetooth scan granted", Toast.LENGTH_SHORT).show();
             }  else {
                 // You can directly ask for the permission.
                 // The registered ActivityResultCallback gets the result of this request.
                 requestPermissionLauncher.launch(
                         Manifest.permission.BLUETOOTH_SCAN
+                );
+            }
+            if (ContextCompat.checkSelfPermission(
+                    getActivity(), Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+                // You can use the API that requires the permission.
+                Toast.makeText(getActivity(), "Bluetooth connect granted", Toast.LENGTH_SHORT).show();
+            }  else {
+                // You can directly ask for the permission.
+                // The registered ActivityResultCallback gets the result of this request.
+                requestPermissionLauncher.launch(
+                        Manifest.permission.BLUETOOTH_CONNECT
                 );
             }
         } else {
@@ -201,10 +212,7 @@ public class DeviceSelectorFrag extends Fragment {
                 scan_results.setText("");
                 scan_results.append("Device: >" + dev_name + "<    ADDR: " + result.getDevice().getAddress() + "\n");
             }
-
         }
-
-
     };
 
 
