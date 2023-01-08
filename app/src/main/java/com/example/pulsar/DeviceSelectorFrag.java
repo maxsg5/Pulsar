@@ -1,6 +1,6 @@
 package com.example.pulsar;
 
-import static android.content.ContentValues.TAG;
+
 import static android.nfc.NfcAdapter.EXTRA_DATA;
 
 import android.Manifest;
@@ -58,12 +58,17 @@ public class DeviceSelectorFrag extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
+    public String TAG = "LOGZ";
 
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
 
+    Button StopButton;
     TextView scan_results;
+    TextView rate_display;
+
+    byte[] ble_data;
 
     public final static String ACTION_GATT_SERVICES_DISCOVERED =
             "com.example.bluetooth.le.ACTION_GATT_SERVICES_DISCOVERED";
@@ -111,9 +116,11 @@ public class DeviceSelectorFrag extends Fragment {
         //initialize UI
         View view = inflater.inflate(R.layout.fragment_device_selector, container, false);
         Button ScanButton = (Button) view.findViewById(R.id.ScanButton);
-        Button ScanStopButton = (Button) view.findViewById(R.id.ScanStopButton);
+        StopButton = (Button) view.findViewById(R.id.ScanStopButton);
         scan_results = (TextView) view.findViewById(R.id.scan_results);
         scan_results.setMovementMethod(new ScrollingMovementMethod());
+
+        rate_display = (TextView) view.findViewById(R.id.rate_display);
         //Log.d("LOGSHIT", "onCreate: yooooooooooooo");
         //create onClickListener for ScanButton
         ScanButton.setOnClickListener(new View.OnClickListener() {
@@ -125,8 +132,8 @@ public class DeviceSelectorFrag extends Fragment {
             }
         });
 
-        //create onClickListener for ScanStopButton
-        ScanStopButton.setOnClickListener(new View.OnClickListener() {
+        //create onClickListener for StopButton
+        StopButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 stopBluetoothScan();
@@ -227,6 +234,8 @@ public class DeviceSelectorFrag extends Fragment {
 
     }
 
+
+
     public ScanCallback leScanback = new ScanCallback() {
         @Override
         public void onScanResult(int callbackType, @NonNull ScanResult result) {
@@ -237,21 +246,10 @@ public class DeviceSelectorFrag extends Fragment {
                 scan_results.setText("");
                 scan_results.append("Device: >" + dev_name + "<    ADDR: " + result.getDevice().getAddress() + "\n");
 
+                BluetoothGatt bluegatt = result.getDevice().connectGatt(getActivity(), true, bluetoothGattCallback);
+                Log.d("custom", "Connecting to GATT");
 
-                if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
-                    Toast.makeText(getActivity(), "perm not granted", Toast.LENGTH_SHORT).show();
 
-                    return;
-                }
-                result.getDevice().connectGatt(getActivity(), true, bluetoothGattCallback);
-                Toast.makeText(getActivity(), "Connecting to gatt", Toast.LENGTH_SHORT).show();
 
             }
 
@@ -260,39 +258,23 @@ public class DeviceSelectorFrag extends Fragment {
 
     private final BluetoothGattCallback bluetoothGattCallback = new BluetoothGattCallback() {
 
-
-        public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, byte[] value) {
-            super.onCharacteristicChanged(gatt, characteristic);
-            Log.d("LOGSHIT", "VALUE changed!!: " + value);
-        }
-
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
             super.onCharacteristicChanged(gatt, characteristic);
-            Log.d("LOGSHIT", "VALUE changed!!: " + characteristic.getValue());
+            //Log.d("LOGSHIT", "VALUE changed!!: " + characteristic.getValue());
             broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
         }
 
         @Override
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            Log.d(TAG, "onConnectionStateChange: " + status);
-            Log.d(TAG, "onConnectionStateChange: " + newState);
+            Log.d(TAG, "onConnectionStateChangez: " + status);
+            Log.d(TAG, "onConnectionStateChangez: " + newState);
 
 
             if (newState == BluetoothProfile.STATE_CONNECTED) {
                 // successfully connected to the GATT Server
 
                 Log.d("LOGSHIT", "onConnectionStateChange: CONNECTED TO GATT");
-                if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                    // TODO: Consider calling
-                    //    ActivityCompat#requestPermissions
-                    // here to request the missing permissions, and then overriding
-                    //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                    //                                          int[] grantResults)
-                    // to handle the case where the user grants the permission. See the documentation
-                    // for ActivityCompat#requestPermissions for more details.
-                    return;
-                }
 
                 gatt.discoverServices();
                 Log.d("LOGSHIT", "onConnectionStateChange: DISCOVERING SERVICES");
@@ -315,21 +297,47 @@ public class DeviceSelectorFrag extends Fragment {
                     Log.d("LOGSHIT", "onServicesDiscovered: " + service.getCharacteristics());
                     for (BluetoothGattCharacteristic characteristic : service.getCharacteristics()) {
                         Log.d("LOGSHIT", "Characteristic: " + characteristic.getUuid());
-                        Log.d("LOGSHIT", "setCharNoti" + gatt.setCharacteristicNotification(characteristic, true));
-
                         if (characteristic.getUuid().compareTo(UUID.fromString("6e400003-b5a3-f393-e0a9-e50e24dcca9e")) == 0) {
                             Log.d("LOGSHIT", "FUCK YEA");
+                            Log.d("LOGSHIT", "Value:" + characteristic.getValue());
+                            // Enable notifications for TX stream on client
+                            Log.d("LOGSHIT", "setCharNoti" + gatt.setCharacteristicNotification(characteristic, true));
+
+                            // Enable notification on BLE device
                             List<BluetoothGattDescriptor> descriptors = characteristic.getDescriptors();
                             Log.d("LOGSHIT", "found " + descriptors.size() + " descriptors");
                             for (BluetoothGattDescriptor descriptor : descriptors) {
                                 Log.d("LOGSHIT", "Descriptor: " + descriptor.getUuid());
-                                descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
-                                gatt.readDescriptor(descriptor);
+                                descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+                                gatt.writeDescriptor(descriptor);
+
                             }
 
-                            characteristic.getValue();
-                            boolean test = gatt.readCharacteristic(characteristic);
-                            Log.d("LOGSHIT", "onServicesDiscovered: READ CHARACTERISTIC" + test);
+                            // Update the stop button to stop the notifications instead of the scan since the scan is done
+                            //create onClickListener for StopButton
+                            StopButton.setText("Unsubscribe");
+                            StopButton.setOnClickListener(new View.OnClickListener() {
+                                @Override
+                                // TODO write the unsubscribe logic
+                                public void onClick(View view) {
+
+                                    scan_results.setText("Found syncc");
+                                    rate_display.setText("");
+                                    for( int i = 0; i < ble_data.length; i++){
+                                        rate_display.append(String.format(">%x<", Byte.toUnsignedInt(ble_data[i])));
+                                        if (i > 0 && ble_data[i-1] == 0x55){
+                                            scan_results.setText("Found sync");
+
+                                            rate_display.append(String.format("\n\n%d", Byte.toUnsignedInt(ble_data[i])));
+
+                                        }
+
+                                    }
+                                }
+                            });
+                            //characteristic.getValue();
+                           // boolean test = gatt.readCharacteristic(characteristic);
+                           // Log.d("LOGSHIT", "onServicesDiscovered: READ CHARACTERISTIC" + test);
                         }
                     }
                 }
@@ -395,14 +403,27 @@ public class DeviceSelectorFrag extends Fragment {
             int format = -1;
             if ((flag & 0x01) != 0) {
                 format = BluetoothGattCharacteristic.FORMAT_UINT16;
-                Log.d(TAG, "Heart rate format UINT16.");
+                ///Log.d(TAG, "Heart rate format UINT16.");
             } else {
                 format = BluetoothGattCharacteristic.FORMAT_UINT8;
-                Log.d(TAG, "Heart rate format UINT8.");
+                ///Log.d(TAG, "Heart rate format UINT8.");
             }
-            final int heartRate = characteristic.getIntValue(format, 1);
-            Log.d(TAG, String.format("Received heart rate: %d", heartRate));
-            intent.putExtra(EXTRA_DATA, String.valueOf(heartRate));
+            // print bytes
+            ble_data = characteristic.getValue();
+
+            for( int i = 0; i < ble_data.length; i++){
+                //Log.d(TAG, String.format(">%x<", Byte.toUnsignedInt(ble_data[i+1])));
+                if (i > 0 && ble_data[i-1] == 0x01){
+
+                    Log.d(TAG, String.format("\n\nBlood Oxygen : %d", Byte.toUnsignedInt(ble_data[i])));
+                    Log.d(TAG, String.format("\n\nHeart Rate: %d", Byte.toUnsignedInt(ble_data[i+1])));
+                    Log.d(TAG,"SPACER");
+
+                }
+
+            }
+
+           // intent.putExtra(EXTRA_DATA, String.valueOf(heartRate));
         } else {
             // For all other profiles, writes the data formatted in HEX.
             final byte[] data = characteristic.getValue();

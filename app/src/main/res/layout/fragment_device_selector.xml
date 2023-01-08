@@ -55,5 +55,14 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/ScanStopButton" />
 
+    <TextView
+        android:id="@+id/rate_display"
+        android:layout_width="60dp"
+        android:layout_height="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/scan_results" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
