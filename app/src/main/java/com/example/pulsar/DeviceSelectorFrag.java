@@ -15,10 +15,12 @@ import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import android.os.Handler;
+import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -45,6 +47,8 @@ public class DeviceSelectorFrag extends Fragment {
     // TODO: Rename and change types of parameters
     private String mParam1;
     private String mParam2;
+
+    TextView scan_results;
 
     public DeviceSelectorFrag() {
         // Required empty public constructor
@@ -84,6 +88,9 @@ public class DeviceSelectorFrag extends Fragment {
         //initialize UI
         View view = inflater.inflate(R.layout.fragment_device_selector, container, false);
         Button ScanButton = (Button) view.findViewById(R.id.ScanButton);
+        Button ScanStopButton = (Button) view.findViewById(R.id.ScanStopButton);
+        scan_results = (TextView) view.findViewById(R.id.scan_results);
+        scan_results.setMovementMethod(new ScrollingMovementMethod());
 
         //create onClickListener for ScanButton
         ScanButton.setOnClickListener(new View.OnClickListener() {
@@ -92,6 +99,14 @@ public class DeviceSelectorFrag extends Fragment {
 
                 checkBluetooth();
                 bluetoothScan();
+            }
+        });
+
+        //create onClickListener for ScanStopButton
+        ScanStopButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                stopBluetoothScan();
             }
         });
 
@@ -167,30 +182,29 @@ public class DeviceSelectorFrag extends Fragment {
         Toast.makeText(getActivity(), "Scanning!", Toast.LENGTH_SHORT).show();
 
         scanner.startScan(leScanback);
+    }
 
+    public void stopBluetoothScan() {
+        BluetoothLeScannerCompat scanner = BluetoothLeScannerCompat.getScanner();
         scanner.stopScan(leScanback);
+        Toast.makeText(getActivity(), "Stopped scanning!", Toast.LENGTH_SHORT).show();
+
     }
 
     public ScanCallback leScanback = new ScanCallback() {
         @Override
         public void onScanResult(int callbackType, @NonNull ScanResult result) {
             super.onScanResult(callbackType, result);
-
-            if (ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                Toast.makeText(getActivity(), "Missing perms!", Toast.LENGTH_SHORT).show();
-
-                return;
+            String dev_name = result.getDevice().getName();
+            if (dev_name != null && dev_name.contains("OxySmart 6511")) {
+                stopBluetoothScan();
+                scan_results.setText("");
+                scan_results.append("Device: >" + dev_name + "<    ADDR: " + result.getDevice().getAddress() + "\n");
             }
-            Toast.makeText(getActivity(), result.getDevice().getName(), Toast.LENGTH_SHORT).show();
 
         }
+
+
     };
 
 
