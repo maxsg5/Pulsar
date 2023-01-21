@@ -26,6 +26,12 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     public static final String COLUMN_ALARM_SOUND = "'ALARM_SOUND'";
     public static final String COLUMN_SNOOZE_PERIOD="'SNOOZE_PERIOD'";
 
+    public static final String DEVICE_TABLE ="'DEVICE_TABLE'";
+    public static final String COLUMN_DEVICE_ID="'DEVICE_ID'";
+    public static final String COLUMN_DEVICE_NAME ="'DEVICE_NAME'";
+    public static final String COLUMN_MAC_ADDRESS="'MAC_ADDRESS'";
+
+
 
     public DataBaseHelper(@Nullable Context context) { super(context, "pulsar.db", null, 1); }
 
@@ -57,26 +63,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
         SQLiteDatabase db =this.getWritableDatabase();
         ContentValues cv = new ContentValues();
-        /*cv.put(COLUMN_EMPLOYEE_ID, "10" );
-        cv.put(COLUMN_EMPLOYEE_NAME," Rayquaza");
-        cv.put(COLUMN_TRAINED_OPEN,"false");
-        cv.put(COLUMN_TRAINED_CLOSE, "false");
-        cv.put(COLUMN_TEST_OPEN, "false");
-        cv.put(COLUMN_TEST_CLOSE," false");*/
 
-       /* cv.put(COLUMN_EMPLOYEE_ID, employeeModel.getID() );
-        cv.put(COLUMN_EMPLOYEE_NAME,employeeModel.getName());
-        cv.put(COLUMN_TRAINED_OPEN,employeeModel.getTrainedOpen());
-        cv.put(COLUMN_TRAINED_CLOSE, employeeModel.getTrainedClose());
-        cv.put(COLUMN_TEST_OPEN, employeeModel.getTestOpen());
-        cv.put(COLUMN_TEST_CLOSE, employeeModel.getTestClose());
-
-        long insert =  db.insert(EMPLOYEE_TABLE, null, cv);
-        if (insert == -1) {
-            return false;
-        } else {
-            return true;
-        }*/
 
         return true;
 
@@ -87,6 +74,9 @@ public class DataBaseHelper extends SQLiteOpenHelper {
     public boolean addAlarm(AlarmModel alarmModel){
         SQLiteDatabase db = getWritableDatabase();
         ContentValues cv = new ContentValues();
+        String check =alarmModel.getAlarm_time();
+        out.print("check is "+ check);
+
 
         cv.put(COLUMN_ALARM_ID, alarmModel.getAlarm_id());
         cv.put(COLUMN_ALARM_TIME, alarmModel.getAlarm_time());
@@ -109,6 +99,24 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
     }
 
+    public boolean addDevice(bluetoothModel bluetoothModel){
+        SQLiteDatabase db = getWritableDatabase();
+        ContentValues cv = new ContentValues();
+
+        cv.put(COLUMN_DEVICE_ID, bluetoothModel.getDevice_id());
+        cv.put(COLUMN_DEVICE_NAME, bluetoothModel.getDevice_id());
+        cv.put(COLUMN_MAC_ADDRESS, bluetoothModel.getMac_address());
+
+        long insert = db.insertOrThrow(ALARM_TABLE, null, cv);
+        db.close();
+        if (insert == -1) {
+            return false;
+        } else {
+            return true;
+        }
+
+    }
+
     public void  dropTables(){
 
         SQLiteDatabase db = this.getWritableDatabase();
@@ -120,7 +128,8 @@ public class DataBaseHelper extends SQLiteOpenHelper {
 
     public boolean checkAlarmTime(String time){
         SQLiteDatabase db = this.getWritableDatabase();
-        String query = "SELECT * FROM" +ALARM_TABLE+ "WHERE" + COLUMN_ALARM_TIME+"=?";
+        //String query = "SELECT * FROM " +ALARM_TABLE+ " WHERE " + COLUMN_ALARM_TIME+"=?";
+        String query = "SELECT * FROM ALARM_TABLE WHERE ALARM_TIME =  ?";
         Cursor cursor = db.rawQuery(query, new String[]{time});
         if(cursor.getCount() <= 0)
         {
@@ -148,6 +157,20 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         db.close();
     }
 
+    public void make_device_table(){
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        String createTableStatement = "CREATE TABLE " + DEVICE_TABLE + " (" + COLUMN_DEVICE_ID +
+                " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                + COLUMN_DEVICE_NAME + " text, "
+                + COLUMN_MAC_ADDRESS + " text " + " )";
+        db.execSQL(createTableStatement);
+        db.close();
+
+    }
+
+
+
     public void updateAlarm(AlarmModel alarmModel) {
         SQLiteDatabase db =this.getWritableDatabase();
         ContentValues cv = new ContentValues();
@@ -157,7 +180,7 @@ public class DataBaseHelper extends SQLiteOpenHelper {
         cv.put(COLUMN_ALARM_SOUND, alarmModel.getAlarm_sound());
         cv.put(COLUMN_SNOOZE_PERIOD, alarmModel.getSnooze_period());
 
-        db.update(ALARM_TABLE, cv, "EMPLOYEE=?", new String[]{String.valueOf(alarmModel.getAlarm_id())});
+        db.update(ALARM_TABLE, cv, "ALARM=?", new String[]{String.valueOf(alarmModel.getAlarm_id())});
         db.close();
 
     }
