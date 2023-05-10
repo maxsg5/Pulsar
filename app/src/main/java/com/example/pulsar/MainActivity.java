@@ -1,10 +1,16 @@
 package com.example.pulsar;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.widget.ProgressBar;
 import android.widget.TextClock;
+
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationBarView;
 
 import java.util.Timer;
 import java.util.TimerTask;
@@ -18,33 +24,30 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         //setup UI elements to link them to code
-        ProgressBar progressBar = findViewById(R.id.progressBar);
-        TextClock clock = findViewById(R.id.Clock);
+        BottomNavigationView bottomNav = findViewById(R.id.bottom_navigation);
 
-        //set progress bar to 0%
-        progressBar.setProgress(0);
-    }
+        // as soon as the application opens the first
+        // fragment should be shown to the user
+        // in this case it is DeviceSelector fragment
+        getSupportFragmentManager().beginTransaction().replace(R.id.fragmentContainerView, new DeviceSelectorFrag()).commit();
 
-    //onStart method
-    @Override
-    protected void onStart() {
-        super.onStart();
-
-        //call updateProgress method every 1000ms
-        new Timer().scheduleAtFixedRate(new TimerTask() {
+        bottomNav.setOnItemSelectedListener(new NavigationBarView.OnItemSelectedListener() {
             @Override
-            public void run() {
-                updateProgressBar(10);
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                int id = item.getItemId();
+                switch(id){
+                    //check id
+                    case R.id.bluetooth:
+                        //if bluetooth is selected, open the bluetooth fragment
+                        getSupportFragmentManager().beginTransaction().replace(R.id.fragmentContainerView, new DeviceSelectorFrag()).commit();
+
+                }
+                return true;
             }
-        }, 0, 1000);
-
+        });
     }
 
-    //update progress bar by 10% every 1 second
-    public void updateProgressBar(int incrementAmount){
-        ProgressBar progressBar = findViewById(R.id.progressBar);
-        int progress = progressBar.getProgress();
-        progress += incrementAmount;
-        progressBar.setProgress(progress);
-    }
+
+
+
 }
